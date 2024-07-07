@@ -2,15 +2,25 @@ use std::{
     fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
+
+use multi_threaded_web_server::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
+    let pool = match ThreadPool::new(4) {
+        Ok(thread_pool) => thread_pool,
+        Err(e) => panic!("SHIT!"),
+    };
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        handle_connection(stream);
+        pool.execute(|| {
+            handle_connection(stream);
+        });
     }
 }
 
